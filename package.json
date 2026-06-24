@@ -1,0 +1,12 @@
+{
+  "name": "modal",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "build": "npm install --prefix mern-app/frontend && npm run build --prefix mern-app/frontend && npm install --prefix backend --omit=dev",
+    "start": "npm start --prefix backend"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

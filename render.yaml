@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: modal
+    runtime: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: MONGO_USER
+        sync: false
+      - key: MONGO_PASS
+        sync: false
+      - key: MONGO_CLUSTER
+        sync: false
+      - key: MONGO_DB
+        value: Hospital
