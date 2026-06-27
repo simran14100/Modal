@@ -19,6 +19,7 @@ const otRecordSchema = new mongoose.Schema(
     waitingFileNo: { type: String, default: '' },
     waitingPatientName: { type: String, default: '' },
     waitingStatus: { type: String, enum: STATUS_OPTIONS, default: 'Blank' },
+    locked: { type: Boolean, default: false },
   },
   { timestamps: true }
 )

@@ -1,10 +1,19 @@
 import { useRef, useState } from 'react'
-import { createOtRecord, deleteOtRecord, updateOtRecord } from '../services/api'
+import {
+  createOtRecord,
+  deleteOtRecord,
+  lockOtRecord,
+  updateOtRecord,
+} from '../services/api'
+
+const renumberRows = (rows) => rows.map((row, index) => ({ ...row, otNo: index + 1 }))
+import { isRowLocked } from '../utils/otRowLock'
 import StatusSelect from './StatusSelect'
 
 function DataTable({ data, onChange, loading, sheetDate, onDateChange }) {
   const debounceTimers = useRef({})
   const [confirmOtNo, setConfirmOtNo] = useState(null)
+  const [confirmLockOtNo, setConfirmLockOtNo] = useState(null)
   const [errorMessage, setErrorMessage] = useState('')
 
   const saveRow = async (otNo, updatedRow) => {
@@ -21,20 +30,19 @@ function DataTable({ data, onChange, loading, sheetDate, onDateChange }) {
       onChange((prev) => prev.map((item) => (item.otNo === otNo ? saved : item)))
     } catch (error) {
       console.error(error)
-      setErrorMessage('Failed to save changes. Please try again.')
+      setErrorMessage(error.message || 'Failed to save changes. Please try again.')
     }
   }
 
   const updateRow = (otNo, field, value) => {
     const row = data.find((item) => item.otNo === otNo)
-    if (!row) return
+    if (!row || isRowLocked(row)) return
 
     const updatedRow = { ...row, [field]: value }
     onChange(data.map((item) => (item.otNo === otNo ? updatedRow : item)))
 
-    const timerKey = `${otNo}-${field}`
-    clearTimeout(debounceTimers.current[timerKey])
-    debounceTimers.current[timerKey] = setTimeout(() => saveRow(otNo, updatedRow), 500)
+    clearTimeout(debounceTimers.current[otNo])
+    debounceTimers.current[otNo] = setTimeout(() => saveRow(otNo, updatedRow), 500)
   }
 
   const addRow = async () => {
@@ -51,14 +59,50 @@ function DataTable({ data, onChange, loading, sheetDate, onDateChange }) {
     const otNo = confirmOtNo
     setConfirmOtNo(null)
 
+    clearTimeout(debounceTimers.current[otNo])
+    delete debounceTimers.current[otNo]
+    Object.keys(debounceTimers.current).forEach((key) => {
+      clearTimeout(debounceTimers.current[key])
+      delete debounceTimers.current[key]
+    })
+
     try {
-      if (data.find((row) => row.otNo === otNo)?.id) {
-        await deleteOtRecord(otNo)
+      const row = data.find((item) => item.otNo === otNo)
+      if (row?.id) {
+        const updated = await deleteOtRecord(otNo)
+        onChange(updated)
+      } else {
+        onChange((prev) => renumberRows(prev.filter((item) => item.otNo !== otNo)))
       }
-      onChange((prev) => prev.filter((row) => row.otNo !== otNo))
     } catch (error) {
       console.error(error)
       setErrorMessage('Failed to remove row. Please try again.')
+    }
+  }
+
+  const confirmLockRow = async () => {
+    const otNo = confirmLockOtNo
+    setConfirmLockOtNo(null)
+
+    const row = data.find((item) => item.otNo === otNo)
+    if (!row || isRowLocked(row)) return
+
+    clearTimeout(debounceTimers.current[otNo])
+
+    try {
+      const saved = await lockOtRecord(otNo, {
+        ongoingFileNo: row.ongoingFileNo,
+        ongoingPatientName: row.ongoingPatientName,
+        ongoingStatus: row.ongoingStatus,
+        waitingOtNo: row.waitingOtNo,
+        waitingFileNo: row.waitingFileNo,
+        waitingPatientName: row.waitingPatientName,
+        waitingStatus: row.waitingStatus,
+      })
+      onChange((prev) => prev.map((item) => (item.otNo === otNo ? saved : item)))
+    } catch (error) {
+      console.error(error)
+      setErrorMessage(error.message || 'Failed to lock row. Please try again.')
     }
   }
 
@@ -68,6 +112,25 @@ function DataTable({ data, onChange, loading, sheetDate, onDateChange }) {
 
   const rows = [...data].sort((a, b) => a.otNo - b.otNo)
 
+  const renderTextCell = (row, field, placeholder) => {
+    const value = row[field] || ''
+    const locked = isRowLocked(row)
+
+    if (locked) {
+      return <span className="ot-readonly-value">{value || '—'}</span>
+    }
+
+    return (
+      <input
+        type="text"
+        className="table-input"
+        value={value}
+        onChange={(e) => updateRow(row.otNo, field, e.target.value)}
+        placeholder={placeholder}
+      />
+    )
+  }
+
   return (
     <div className="editable-table ot-sheet">
       {errorMessage && (
@@ -76,6 +139,22 @@ function DataTable({ data, onChange, loading, sheetDate, onDateChange }) {
           <button type="button" onClick={() => setErrorMessage('')} aria-label="Dismiss">
             &times;
           </button>
+        </div>
+      )}
+
+      {confirmLockOtNo !== null && (
+        <div className="ot-confirm-overlay" role="dialog" aria-modal="true">
+          <div className="ot-confirm-box">
+            <p>Lock OT row {confirmLockOtNo}? You will not be able to edit it after locking.</p>
+            <div className="ot-confirm-actions">
+              <button type="button" className="modal-action-btn" onClick={() => setConfirmLockOtNo(null)}>
+                Cancel
+              </button>
+              <button type="button" className="row-lock-btn" onClick={confirmLockRow}>
+                Yes, Lock
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -137,78 +216,64 @@ function DataTable({ data, onChange, loading, sheetDate, onDateChange }) {
           </tr>
         </thead>
         <tbody>
-          {rows.map((row) => (
-            <tr key={row.otNo}>
-              <td className="ot-td-otno">{row.otNo}</td>
-              <td className="ot-td-ongoing">
-                <input
-                  type="text"
-                  className="table-input"
-                  value={row.ongoingFileNo || ''}
-                  onChange={(e) => updateRow(row.otNo, 'ongoingFileNo', e.target.value)}
-                  placeholder="File No."
-                />
-              </td>
-              <td className="ot-td-ongoing">
-                <input
-                  type="text"
-                  className="table-input"
-                  value={row.ongoingPatientName || ''}
-                  onChange={(e) => updateRow(row.otNo, 'ongoingPatientName', e.target.value)}
-                  placeholder="Patient Name"
-                />
-              </td>
-              <td className="ot-td-ongoing">
-                <StatusSelect
-                  value={row.ongoingStatus || 'Blank'}
-                  onChange={(status) => updateRow(row.otNo, 'ongoingStatus', status)}
-                />
-              </td>
-              <td className="ot-td-waiting">
-                <input
-                  type="text"
-                  className="table-input"
-                  value={row.waitingOtNo || ''}
-                  onChange={(e) => updateRow(row.otNo, 'waitingOtNo', e.target.value)}
-                  placeholder="OT No."
-                />
-              </td>
-              <td className="ot-td-waiting">
-                <input
-                  type="text"
-                  className="table-input"
-                  value={row.waitingFileNo || ''}
-                  onChange={(e) => updateRow(row.otNo, 'waitingFileNo', e.target.value)}
-                  placeholder="File No."
-                />
-              </td>
-              <td className="ot-td-waiting">
-                <input
-                  type="text"
-                  className="table-input"
-                  value={row.waitingPatientName || ''}
-                  onChange={(e) => updateRow(row.otNo, 'waitingPatientName', e.target.value)}
-                  placeholder="Patient Name"
-                />
-              </td>
-              <td className="ot-td-waiting">
-                <StatusSelect
-                  value={row.waitingStatus || 'Blank'}
-                  onChange={(status) => updateRow(row.otNo, 'waitingStatus', status)}
-                />
-              </td>
-              <td className="ot-td-action">
-                <button
-                  type="button"
-                  className="row-delete-btn"
-                  onClick={() => setConfirmOtNo(row.otNo)}
-                  title="Remove row"
-                >
-                  Remove
-                </button>
-              </td>
-            </tr>
-          ))}
+          {rows.map((row) => {
+            const locked = isRowLocked(row)
+
+            return (
+              <tr key={row.otNo} className={locked ? 'ot-row--locked' : ''}>
+                <td className="ot-td-otno">{row.otNo}</td>
+                <td className="ot-td-ongoing">{renderTextCell(row, 'ongoingFileNo', 'File No.')}</td>
+                <td className="ot-td-ongoing">
+                  {renderTextCell(row, 'ongoingPatientName', 'Patient Name')}
+                </td>
+                <td className="ot-td-ongoing">
+                  <StatusSelect
+                    value={row.ongoingStatus || 'Blank'}
+                    onChange={(status) => updateRow(row.otNo, 'ongoingStatus', status)}
+                    disabled={locked}
+                  />
+                </td>
+                <td className="ot-td-waiting">{renderTextCell(row, 'waitingOtNo', 'OT No.')}</td>
+                <td className="ot-td-waiting">{renderTextCell(row, 'waitingFileNo', 'File No.')}</td>
+                <td className="ot-td-waiting">
+                  {renderTextCell(row, 'waitingPatientName', 'Patient Name')}
+                </td>
+                <td className="ot-td-waiting">
+                  <StatusSelect
+                    value={row.waitingStatus || 'Blank'}
+                    onChange={(status) => updateRow(row.otNo, 'waitingStatus', status)}
+                    disabled={locked}
+                  />
+                </td>
+                <td className="ot-td-action">
+                  {locked ? (
+                    <span className="ot-locked-label" title="This row is locked">
+                      Locked
+                    </span>
+                  ) : (
+                    <div className="ot-action-buttons">
+                      <button
+                        type="button"
+                        className="row-lock-btn"
+                        onClick={() => setConfirmLockOtNo(row.otNo)}
+                        title="Lock row"
+                      >
+                        Lock
+                      </button>
+                      <button
+                        type="button"
+                        className="row-delete-btn"
+                        onClick={() => setConfirmOtNo(row.otNo)}
+                        title="Remove row"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  )}
+                </td>
+              </tr>
+            )
+          })}
         </tbody>
       </table>
 

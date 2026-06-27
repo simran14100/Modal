@@ -27,3 +27,11 @@ export function updateOtRecord(otNo, record) {
 export function deleteOtRecord(otNo) {
   return fetch(`${API_BASE}/${otNo}`, { method: 'DELETE' }).then(handleResponse)
 }
+
+export function lockOtRecord(otNo, record) {
+  return fetch(`${API_BASE}/${otNo}/lock`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(record),
+  }).then(handleResponse)
+}

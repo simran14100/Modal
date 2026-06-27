@@ -1,9 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { OT_STATUS_CLASS, OT_STATUS_OPTIONS } from '../constants/otStatus'
 
-function StatusSelect({ value, onChange, options = OT_STATUS_OPTIONS }) {
+function StatusSelect({ value, onChange, options = OT_STATUS_OPTIONS, disabled = false }) {
   const [open, setOpen] = useState(false)
   const rootRef = useRef(null)
+
+  useEffect(() => {
+    if (disabled) setOpen(false)
+  }, [disabled])
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -17,6 +21,14 @@ function StatusSelect({ value, onChange, options = OT_STATUS_OPTIONS }) {
 
   const displayValue = value || 'Blank'
   const statusClass = OT_STATUS_CLASS[displayValue] || 'blank'
+
+  if (disabled) {
+    return (
+      <div className="status-select status-select--disabled">
+        <span className={`status-badge status-${statusClass}`}>{displayValue}</span>
+      </div>
+    )
+  }
 
   return (
     <div ref={rootRef} className={`status-select${open ? ' status-select--open' : ''}`}>

@@ -377,6 +377,18 @@
   pointer-events: none;
 }
 
+.status-select--disabled {
+  display: flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 2px 0;
+}
+
+.status-select--disabled .status-badge {
+  width: 100%;
+  justify-content: center;
+}
+
 .col-actions {
   width: 90px;
   text-align: center;
@@ -396,6 +408,35 @@
 
 .row-delete-btn:hover {
   background: rgba(239, 68, 68, 0.2);
+}
+
+.row-lock-btn {
+  padding: 6px 10px;
+  font-size: 13px;
+  border-radius: 6px;
+  border: 1px solid rgba(59, 130, 246, 0.45);
+  background: rgba(59, 130, 246, 0.12);
+  color: #2563eb;
+  cursor: pointer;
+  font-family: var(--sans);
+  transition: background 0.2s;
+}
+
+.row-lock-btn:hover {
+  background: rgba(59, 130, 246, 0.22);
+}
+
+.modal-content--dark .row-lock-btn {
+  color: #93c5fd;
+  border-color: rgba(96, 165, 250, 0.45);
+  background: rgba(59, 130, 246, 0.2);
+}
+
+.ot-action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: stretch;
 }
 
 .empty-row {
@@ -744,7 +785,7 @@
 .ot-td-action {
   background: var(--ot-action-bg, #f8fafc);
   text-align: center;
-  width: 90px;
+  width: 100px;
 }
 
 .ot-table .table-input {
@@ -765,6 +806,30 @@
 
 .modal-content--dark .ot-table thead th {
   color: var(--modal-text, #f1f5f9);
+}
+
+.ot-row--locked {
+  opacity: 0.92;
+}
+
+.ot-readonly-value {
+  display: block;
+  min-height: 38px;
+  padding: 8px 10px;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--ot-cell-text, #0f172a);
+  word-break: break-word;
+}
+
+.ot-locked-label {
+  display: inline-block;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--modal-text-muted, #64748b);
 }
 
 .ot-table thead th {
