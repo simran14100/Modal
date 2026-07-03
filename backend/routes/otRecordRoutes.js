@@ -5,6 +5,7 @@ const {
   upsertOtRecord,
   deleteOtRecord,
   lockOtRecord,
+  unlockOtRecord,
 } = require('../controllers/otRecordController')
 
 const router = express.Router()
@@ -12,6 +13,7 @@ const router = express.Router()
 router.get('/', getOtRecords)
 router.post('/', createOtRecord)
 router.patch('/:otNo/lock', lockOtRecord)
+router.patch('/:otNo/unlock', unlockOtRecord)
 router.put('/:otNo', upsertOtRecord)
 router.delete('/:otNo', deleteOtRecord)
 

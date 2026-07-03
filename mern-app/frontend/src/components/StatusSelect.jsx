@@ -3,6 +3,7 @@ import { OT_STATUS_CLASS, OT_STATUS_OPTIONS } from '../constants/otStatus'
 
 function StatusSelect({ value, onChange, options = OT_STATUS_OPTIONS, disabled = false }) {
   const [open, setOpen] = useState(false)
+  const [customText, setCustomText] = useState('')
   const rootRef = useRef(null)
 
   useEffect(() => {
@@ -20,7 +21,15 @@ function StatusSelect({ value, onChange, options = OT_STATUS_OPTIONS, disabled =
   }, [])
 
   const displayValue = value || 'Blank'
-  const statusClass = OT_STATUS_CLASS[displayValue] || 'blank'
+  const isPreset = options.includes(displayValue)
+  const statusClass = isPreset ? OT_STATUS_CLASS[displayValue] || 'blank' : 'blank'
+
+  const applyCustom = () => {
+    const trimmed = customText.trim()
+    onChange(trimmed || 'Blank')
+    setCustomText('')
+    setOpen(false)
+  }
 
   if (disabled) {
     return (
@@ -63,6 +72,29 @@ function StatusSelect({ value, onChange, options = OT_STATUS_OPTIONS, disabled =
               </button>
             </li>
           ))}
+          <li role="presentation" className="status-select-custom">
+            <input
+              type="text"
+              className="status-select-custom-input"
+              placeholder="Type custom status..."
+              value={customText}
+              onChange={(e) => setCustomText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  applyCustom()
+                }
+              }}
+            />
+            <button
+              type="button"
+              className="status-select-custom-apply"
+              onClick={applyCustom}
+              disabled={!customText.trim()}
+            >
+              Set
+            </button>
+          </li>
         </ul>
       )}
     </div>

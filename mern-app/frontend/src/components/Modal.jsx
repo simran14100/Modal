@@ -53,14 +53,11 @@ function Modal({
     if (!tableData?.length) return
     const exportData = tableData.map((row) => ({
       Date: sheetDate || '',
-      'OT No.': row.otNo,
-      'On Going - File No.': row.ongoingFileNo,
-      'On Going - Patient Name': row.ongoingPatientName,
-      'On Going - Status': row.ongoingStatus,
-      'Waiting - OT No.': row.waitingOtNo,
-      'Waiting - File No.': row.waitingFileNo,
-      'Waiting - Patient Name': row.waitingPatientName,
-      'Waiting - Status': row.waitingStatus,
+      'S.No.': row.otNo,
+      'File No.': row.ongoingFileNo,
+      'Patient Name': row.ongoingPatientName,
+      Status: row.ongoingStatus,
+      'OT No.': row.waitingOtNo,
     }))
     const filename = 'ot-status-board'
     await downloadExcel(exportData, filename)

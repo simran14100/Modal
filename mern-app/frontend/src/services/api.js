@@ -35,3 +35,7 @@ export function lockOtRecord(otNo, record) {
     body: JSON.stringify(record),
   }).then(handleResponse)
 }
+
+export function unlockOtRecord(otNo) {
+  return fetch(`${API_BASE}/${otNo}/unlock`, { method: 'PATCH' }).then(handleResponse)
+}

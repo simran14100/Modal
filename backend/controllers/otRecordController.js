@@ -138,6 +138,29 @@ exports.deleteOtRecord = async (req, res) => {
   }
 }
 
+exports.unlockOtRecord = async (req, res) => {
+  try {
+    const otNo = Number(req.params.otNo)
+    if (Number.isNaN(otNo) || otNo < 1) {
+      return res.status(400).json({ message: 'Invalid OT No.' })
+    }
+
+    const record = await OtRecord.findOneAndUpdate(
+      { otNo },
+      { locked: false },
+      { new: true }
+    )
+
+    if (!record) {
+      return res.status(404).json({ message: 'OT record not found' })
+    }
+
+    res.json(formatRecord(record))
+  } catch (error) {
+    res.status(400).json({ message: 'Failed to unlock OT record', error: error.message })
+  }
+}
+
 exports.lockOtRecord = async (req, res) => {
   try {
     const otNo = Number(req.params.otNo)

@@ -3,12 +3,13 @@ import {
   createOtRecord,
   deleteOtRecord,
   lockOtRecord,
+  unlockOtRecord,
   updateOtRecord,
 } from '../services/api'
-
-const renumberRows = (rows) => rows.map((row, index) => ({ ...row, otNo: index + 1 }))
 import { isRowLocked } from '../utils/otRowLock'
 import StatusSelect from './StatusSelect'
+
+const renumberRows = (rows) => rows.map((row, index) => ({ ...row, otNo: index + 1 }))
 
 function DataTable({ data, onChange, loading, sheetDate, onDateChange }) {
   const debounceTimers = useRef({})
@@ -59,8 +60,6 @@ function DataTable({ data, onChange, loading, sheetDate, onDateChange }) {
     const otNo = confirmOtNo
     setConfirmOtNo(null)
 
-    clearTimeout(debounceTimers.current[otNo])
-    delete debounceTimers.current[otNo]
     Object.keys(debounceTimers.current).forEach((key) => {
       clearTimeout(debounceTimers.current[key])
       delete debounceTimers.current[key]
@@ -106,6 +105,16 @@ function DataTable({ data, onChange, loading, sheetDate, onDateChange }) {
     }
   }
 
+  const unlockRow = async (otNo) => {
+    try {
+      const saved = await unlockOtRecord(otNo)
+      onChange((prev) => prev.map((item) => (item.otNo === otNo ? saved : item)))
+    } catch (error) {
+      console.error(error)
+      setErrorMessage(error.message || 'Failed to unlock row. Please try again.')
+    }
+  }
+
   if (loading) {
     return <p className="table-loading">Loading data...</p>
   }
@@ -145,7 +154,7 @@ function DataTable({ data, onChange, loading, sheetDate, onDateChange }) {
       {confirmLockOtNo !== null && (
         <div className="ot-confirm-overlay" role="dialog" aria-modal="true">
           <div className="ot-confirm-box">
-            <p>Lock OT row {confirmLockOtNo}? You will not be able to edit it after locking.</p>
+            <p>Lock row {confirmLockOtNo}? You will not be able to edit it until you unlock it.</p>
             <div className="ot-confirm-actions">
               <button type="button" className="modal-action-btn" onClick={() => setConfirmLockOtNo(null)}>
                 Cancel
@@ -161,7 +170,7 @@ function DataTable({ data, onChange, loading, sheetDate, onDateChange }) {
       {confirmOtNo !== null && (
         <div className="ot-confirm-overlay" role="dialog" aria-modal="true">
           <div className="ot-confirm-box">
-            <p>Remove OT row {confirmOtNo}?</p>
+            <p>Remove row {confirmOtNo}?</p>
             <div className="ot-confirm-actions">
               <button type="button" className="modal-action-btn" onClick={() => setConfirmOtNo(null)}>
                 Cancel
@@ -192,27 +201,12 @@ function DataTable({ data, onChange, loading, sheetDate, onDateChange }) {
       <table className="data-table ot-table">
         <thead>
           <tr>
-            <th rowSpan={2} className="ot-th-otno">
-              OT No.
-            </th>
-            <th colSpan={3} className="ot-th-section ot-th-ongoing">
-              On Going
-            </th>
-            <th colSpan={4} className="ot-th-section ot-th-waiting">
-              Waiting
-            </th>
-            <th rowSpan={2} className="ot-th-action">
-              Action
-            </th>
-          </tr>
-          <tr>
+            <th className="ot-th-otno">S.No.</th>
             <th className="ot-th-ongoing">File No.</th>
             <th className="ot-th-ongoing">Patient Name</th>
             <th className="ot-th-ongoing">Status</th>
             <th className="ot-th-waiting">OT No.</th>
-            <th className="ot-th-waiting">File No.</th>
-            <th className="ot-th-waiting">Patient Name</th>
-            <th className="ot-th-waiting">Status</th>
+            <th className="ot-th-action">Action</th>
           </tr>
         </thead>
         <tbody>
@@ -234,24 +228,18 @@ function DataTable({ data, onChange, loading, sheetDate, onDateChange }) {
                   />
                 </td>
                 <td className="ot-td-waiting">{renderTextCell(row, 'waitingOtNo', 'OT No.')}</td>
-                <td className="ot-td-waiting">{renderTextCell(row, 'waitingFileNo', 'File No.')}</td>
-                <td className="ot-td-waiting">
-                  {renderTextCell(row, 'waitingPatientName', 'Patient Name')}
-                </td>
-                <td className="ot-td-waiting">
-                  <StatusSelect
-                    value={row.waitingStatus || 'Blank'}
-                    onChange={(status) => updateRow(row.otNo, 'waitingStatus', status)}
-                    disabled={locked}
-                  />
-                </td>
                 <td className="ot-td-action">
-                  {locked ? (
-                    <span className="ot-locked-label" title="This row is locked">
-                      Locked
-                    </span>
-                  ) : (
-                    <div className="ot-action-buttons">
+                  <div className="ot-action-buttons">
+                    {locked ? (
+                      <button
+                        type="button"
+                        className="row-lock-btn"
+                        onClick={() => unlockRow(row.otNo)}
+                        title="Unlock row"
+                      >
+                        Unlock
+                      </button>
+                    ) : (
                       <button
                         type="button"
                         className="row-lock-btn"
@@ -260,16 +248,16 @@ function DataTable({ data, onChange, loading, sheetDate, onDateChange }) {
                       >
                         Lock
                       </button>
-                      <button
-                        type="button"
-                        className="row-delete-btn"
-                        onClick={() => setConfirmOtNo(row.otNo)}
-                        title="Remove row"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  )}
+                    )}
+                    <button
+                      type="button"
+                      className="row-delete-btn"
+                      onClick={() => setConfirmOtNo(row.otNo)}
+                      title="Remove row"
+                    >
+                      Remove
+                    </button>
+                  </div>
                 </td>
               </tr>
             )
