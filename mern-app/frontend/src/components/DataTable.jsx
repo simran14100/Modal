@@ -205,7 +205,6 @@ function DataTable({ data, onChange, loading, sheetDate, onDateChange }) {
             <th className="ot-th-ongoing">File No.</th>
             <th className="ot-th-ongoing">Patient Name</th>
             <th className="ot-th-ongoing">Status</th>
-            <th className="ot-th-waiting">OT No.</th>
             <th className="ot-th-action">Action</th>
           </tr>
         </thead>
@@ -227,7 +226,6 @@ function DataTable({ data, onChange, loading, sheetDate, onDateChange }) {
                     disabled={locked}
                   />
                 </td>
-                <td className="ot-td-waiting">{renderTextCell(row, 'waitingOtNo', 'OT No.')}</td>
                 <td className="ot-td-action">
                   <div className="ot-action-buttons">
                     {locked ? (
