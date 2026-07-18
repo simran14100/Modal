@@ -237,7 +237,7 @@
   width: 100%;
   min-width: 560px;
   border-collapse: collapse;
-  font-size: 15px;
+  font-size: 18px;
   text-align: left;
   color: var(--modal-text, var(--text-h));
 }
@@ -253,7 +253,7 @@
   background: var(--modal-table-header-bg, var(--code-bg));
   color: var(--modal-text, var(--text-h));
   font-weight: 600;
-  font-size: 14px;
+  font-size: 15px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -276,14 +276,15 @@
 .table-select {
   width: 100%;
   min-width: 120px;
-  padding: 8px 10px;
+  padding: 10px 12px;
   border: 1px solid var(--modal-border, var(--border));
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 18px;
   font-family: var(--sans);
   background: var(--modal-btn-bg, #fff);
   color: var(--modal-text, var(--text-h));
   box-sizing: border-box;
+  font-weight: bold;
 }
 
 .table-input::placeholder {
@@ -310,7 +311,8 @@
   justify-content: space-between;
   gap: 8px;
   width: 100%;
-  padding: 8px 12px;
+  padding: 10px 14px;
+  font-size: 16px;
   border: 1px solid var(--modal-border, rgba(0, 0, 0, 0.12));
   border-radius: 8px;
   background: var(--modal-input-bg, #fff);
@@ -512,9 +514,9 @@
 
 .status-badge {
   display: inline-block;
-  padding: 4px 10px;
+  padding: 6px 12px;
   border-radius: 20px;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 500;
 }
 
@@ -748,7 +750,7 @@
 
 .ot-hospital-title {
   margin: 0 0 6px;
-  font-size: 1.35rem;
+  font-size: 2.1rem;
   font-weight: 700;
   letter-spacing: -0.01em;
   color: var(--modal-text, #0f172a);
@@ -756,7 +758,7 @@
 
 .ot-hospital-subtitle {
   margin: 0 0 14px;
-  font-size: 1.05rem;
+  font-size: 1.45rem;
   font-weight: 500;
   color: var(--modal-text-muted, #475569);
 }
@@ -771,7 +773,8 @@
 
 .ot-date-row label {
   font-weight: 600;
-  font-size: 0.9rem;
+   font-weight: bold;
+  font-size: 1.1rem;
   color: var(--modal-text, #0f172a);
 }
 
@@ -788,7 +791,8 @@
 .ot-table th,
 .ot-table td {
   border: 1px solid var(--ot-cell-border, rgba(0, 0, 0, 0.2));
-  padding: 8px 10px;
+  padding: 12px 14px;
+  font-size: 17px;
   vertical-align: middle;
   color: var(--ot-cell-text, #0f172a);
 }
@@ -853,12 +857,13 @@
 
 .ot-readonly-value {
   display: block;
-  min-height: 38px;
-  padding: 8px 10px;
-  font-size: 14px;
+  min-height: 42px;
+  padding: 10px 12px;
+  font-size: 24px;
   line-height: 1.4;
   color: var(--ot-cell-text, #0f172a);
   word-break: break-word;
+  font-weight: bold;
 }
 
 .ot-locked-label {
@@ -896,6 +901,7 @@
 .status-surgery {
   background: rgba(34, 197, 94, 0.2);
   color: #15803d;
+  font-weight: bold;
 }
 
 .status-icu {
