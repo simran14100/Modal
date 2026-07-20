@@ -963,3 +963,20 @@
     min-width: 560px;
   }
 }
+
+
+.modal-action-btn--autoscroll {
+  background: var(--modal-btn-bg, #fff);
+}
+
+.modal-action-btn--autoscroll.active {
+  background: rgba(99, 102, 241, 0.12);
+  border-color: rgba(99, 102, 241, 0.45);
+  color: #4f46e5;
+}
+
+.modal-content--dark .modal-action-btn--autoscroll.active {
+  background: rgba(99, 102, 241, 0.25);
+  border-color: rgba(129, 140, 248, 0.5);
+  color: #c7d2fe;
+}

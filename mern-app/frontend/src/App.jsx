@@ -69,6 +69,7 @@ function App() {
         onBgColorChange={setModalBgColor}
         tableData={tableData}
         sheetDate={sheetDate}
+        loading={loading}  // ← ADD THIS LINE
       >
         <DataTable
           data={tableData}
