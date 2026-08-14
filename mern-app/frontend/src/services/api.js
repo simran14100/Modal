@@ -8,34 +8,38 @@ async function handleResponse(res) {
   return data
 }
 
-export function fetchOtRecords() {
-  return fetch(API_BASE).then(handleResponse)
+function withFloor(floor, path = '') {
+  return `${API_BASE}${path}?floor=${floor}`
 }
 
-export function createOtRecord() {
-  return fetch(API_BASE, { method: 'POST' }).then(handleResponse)
+export function fetchOtRecords(floor) {
+  return fetch(withFloor(floor)).then(handleResponse)
 }
 
-export function updateOtRecord(otNo, record) {
-  return fetch(`${API_BASE}/${otNo}`, {
+export function createOtRecord(floor) {
+  return fetch(withFloor(floor), { method: 'POST' }).then(handleResponse)
+}
+
+export function updateOtRecord(floor, otNo, record) {
+  return fetch(withFloor(floor, `/${otNo}`), {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(record),
   }).then(handleResponse)
 }
 
-export function deleteOtRecord(otNo) {
-  return fetch(`${API_BASE}/${otNo}`, { method: 'DELETE' }).then(handleResponse)
+export function deleteOtRecord(floor, otNo) {
+  return fetch(withFloor(floor, `/${otNo}`), { method: 'DELETE' }).then(handleResponse)
 }
 
-export function lockOtRecord(otNo, record) {
-  return fetch(`${API_BASE}/${otNo}/lock`, {
+export function lockOtRecord(floor, otNo, record) {
+  return fetch(withFloor(floor, `/${otNo}/lock`), {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(record),
   }).then(handleResponse)
 }
 
-export function unlockOtRecord(otNo) {
-  return fetch(`${API_BASE}/${otNo}/unlock`, { method: 'PATCH' }).then(handleResponse)
+export function unlockOtRecord(floor, otNo) {
+  return fetch(withFloor(floor, `/${otNo}/unlock`), { method: 'PATCH' }).then(handleResponse)
 }

@@ -1,6 +1,4 @@
-const OtRecord = require('../models/OtRecord')
-
-const renumberAllRecords = async () => {
+const renumberAllRecords = async (OtRecord) => {
   const records = await OtRecord.find().sort({ otNo: 1 })
   if (records.length === 0) return records
 
@@ -14,7 +12,7 @@ const renumberAllRecords = async () => {
   for (let i = 0; i < records.length; i++) {
     await OtRecord.updateOne({ _id: records[i]._id }, { otNo: i + 1 })
   }
-   
+
   return OtRecord.find().sort({ otNo: 1 })
 }
 
@@ -52,6 +50,8 @@ const formatRecord = (record) => {
 }
 
 exports.getOtRecords = async (req, res) => {
+  const OtRecord = req.otRecordModel
+
   try {
     let records = await OtRecord.find().sort({ otNo: 1 })
 
@@ -61,7 +61,7 @@ exports.getOtRecords = async (req, res) => {
 
     const hasGaps = records.some((record, index) => record.otNo !== index + 1)
     if (hasGaps) {
-      records = await renumberAllRecords()
+      records = await renumberAllRecords(OtRecord)
     }
 
     res.json(records.map(formatRecord))
@@ -71,6 +71,8 @@ exports.getOtRecords = async (req, res) => {
 }
 
 exports.createOtRecord = async (req, res) => {
+  const OtRecord = req.otRecordModel
+
   try {
     const count = await OtRecord.countDocuments()
     const otNo = count + 1
@@ -83,6 +85,8 @@ exports.createOtRecord = async (req, res) => {
 }
 
 exports.upsertOtRecord = async (req, res) => {
+  const OtRecord = req.otRecordModel
+
   try {
     const otNo = Number(req.params.otNo)
     if (Number.isNaN(otNo) || otNo < 1) {
@@ -123,6 +127,8 @@ exports.upsertOtRecord = async (req, res) => {
 }
 
 exports.deleteOtRecord = async (req, res) => {
+  const OtRecord = req.otRecordModel
+
   try {
     const otNo = Number(req.params.otNo)
     const record = await OtRecord.findOneAndDelete({ otNo })
@@ -131,7 +137,7 @@ exports.deleteOtRecord = async (req, res) => {
       return res.status(404).json({ message: 'OT record not found' })
     }
 
-    const records = await renumberAllRecords()
+    const records = await renumberAllRecords(OtRecord)
     res.json(records.map(formatRecord))
   } catch (error) {
     res.status(400).json({ message: 'Failed to delete OT record', error: error.message })
@@ -139,17 +145,15 @@ exports.deleteOtRecord = async (req, res) => {
 }
 
 exports.unlockOtRecord = async (req, res) => {
+  const OtRecord = req.otRecordModel
+
   try {
     const otNo = Number(req.params.otNo)
     if (Number.isNaN(otNo) || otNo < 1) {
       return res.status(400).json({ message: 'Invalid OT No.' })
     }
 
-    const record = await OtRecord.findOneAndUpdate(
-      { otNo },
-      { locked: false },
-      { new: true }
-    )
+    const record = await OtRecord.findOneAndUpdate({ otNo }, { locked: false }, { new: true })
 
     if (!record) {
       return res.status(404).json({ message: 'OT record not found' })
@@ -162,6 +166,8 @@ exports.unlockOtRecord = async (req, res) => {
 }
 
 exports.lockOtRecord = async (req, res) => {
+  const OtRecord = req.otRecordModel
+
   try {
     const otNo = Number(req.params.otNo)
     if (Number.isNaN(otNo) || otNo < 1) {

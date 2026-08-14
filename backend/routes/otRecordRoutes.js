@@ -7,8 +7,11 @@ const {
   lockOtRecord,
   unlockOtRecord,
 } = require('../controllers/otRecordController')
+const floorMiddleware = require('../middleware/floorMiddleware')
 
 const router = express.Router()
+
+router.use(floorMiddleware)
 
 router.get('/', getOtRecords)
 router.post('/', createOtRecord)

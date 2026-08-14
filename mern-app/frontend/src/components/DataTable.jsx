@@ -11,7 +11,7 @@ import StatusSelect from './StatusSelect'
 
 const renumberRows = (rows) => rows.map((row, index) => ({ ...row, otNo: index + 1 }))
 
-function DataTable({ data, onChange, loading, sheetDate, onDateChange }) {
+function DataTable({ floor, data, onChange, loading, sheetDate, onDateChange }) {
   const debounceTimers = useRef({})
   const [confirmOtNo, setConfirmOtNo] = useState(null)
   const [confirmLockOtNo, setConfirmLockOtNo] = useState(null)
@@ -19,7 +19,7 @@ function DataTable({ data, onChange, loading, sheetDate, onDateChange }) {
 
   const saveRow = async (otNo, updatedRow) => {
     try {
-      const saved = await updateOtRecord(otNo, {
+      const saved = await updateOtRecord(floor, otNo, {
         ongoingFileNo: updatedRow.ongoingFileNo,
         ongoingPatientName: updatedRow.ongoingPatientName,
         ongoingStatus: updatedRow.ongoingStatus,
@@ -48,7 +48,7 @@ function DataTable({ data, onChange, loading, sheetDate, onDateChange }) {
 
   const addRow = async () => {
     try {
-      const newRow = await createOtRecord()
+      const newRow = await createOtRecord(floor)
       onChange((prev) => [...prev, newRow].sort((a, b) => a.otNo - b.otNo))
     } catch (error) {
       console.error(error)
@@ -68,7 +68,7 @@ function DataTable({ data, onChange, loading, sheetDate, onDateChange }) {
     try {
       const row = data.find((item) => item.otNo === otNo)
       if (row?.id) {
-        const updated = await deleteOtRecord(otNo)
+        const updated = await deleteOtRecord(floor, otNo)
         onChange(updated)
       } else {
         onChange((prev) => renumberRows(prev.filter((item) => item.otNo !== otNo)))
@@ -89,7 +89,7 @@ function DataTable({ data, onChange, loading, sheetDate, onDateChange }) {
     clearTimeout(debounceTimers.current[otNo])
 
     try {
-      const saved = await lockOtRecord(otNo, {
+      const saved = await lockOtRecord(floor, otNo, {
         ongoingFileNo: row.ongoingFileNo,
         ongoingPatientName: row.ongoingPatientName,
         ongoingStatus: row.ongoingStatus,
@@ -107,7 +107,7 @@ function DataTable({ data, onChange, loading, sheetDate, onDateChange }) {
 
   const unlockRow = async (otNo) => {
     try {
-      const saved = await unlockOtRecord(otNo)
+      const saved = await unlockOtRecord(floor, otNo)
       onChange((prev) => prev.map((item) => (item.otNo === otNo ? saved : item)))
     } catch (error) {
       console.error(error)

@@ -27,15 +27,20 @@ export function isDarkColor(hex) {
 }
 
 export function getPrintTheme(bgColor) {
-  const dark = isDarkColor(bgColor)
+  const { isDark, style } = getModalTheme(bgColor)
 
   return {
     bgColor,
-    isDark: dark,
-    text: dark ? '#f3f4f6' : '#08060d',
-    border: dark ? 'rgba(255, 255, 255, 0.18)' : 'rgba(0, 0, 0, 0.12)',
-    tableHeaderBg: dark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.06)',
-    status: dark
+    isDark,
+    text: style['--modal-text'],
+    border: style['--modal-border'],
+    tableHeaderBg: style['--modal-table-header-bg'],
+    otOngoingBg: style['--ot-ongoing-bg'],
+    otWaitingBg: style['--ot-waiting-bg'],
+    otOtnoBg: style['--ot-otno-bg'],
+    otCellText: style['--ot-cell-text'],
+    otCellBorder: style['--ot-cell-border'],
+    status: isDark
       ? {
           active: { bg: 'rgba(74, 222, 128, 0.2)', color: '#86efac' },
           pending: { bg: 'rgba(250, 204, 21, 0.2)', color: '#fde047' },

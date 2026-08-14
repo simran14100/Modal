@@ -55,7 +55,18 @@ function getPrintableTableHtml(tableElement) {
 }
 
 function buildPrintStyles(theme) {
-  const { bgColor, text, border, tableHeaderBg, status } = theme
+  const {
+    bgColor,
+    text,
+    border,
+    tableHeaderBg,
+    otOngoingBg,
+    otWaitingBg,
+    otOtnoBg,
+    otCellText,
+    otCellBorder,
+    status,
+  } = theme
 
   return `
     * {
@@ -69,10 +80,16 @@ function buildPrintStyles(theme) {
       margin: 16mm;
     }
 
+    html,
     body {
       margin: 0;
       padding: 24px;
       font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+      background-color: ${bgColor} !important;
+      color: ${text};
+    }
+
+    .ot-sheet {
       background-color: ${bgColor};
       color: ${text};
     }
@@ -145,26 +162,34 @@ function buildPrintStyles(theme) {
       color: ${text};
     }
 
+    .ot-date-row {
+      color: ${text};
+    }
+
     .ot-table th,
     .ot-table td {
-      border: 1px solid ${border};
+      border: 1px solid ${otCellBorder};
       padding: 8px 10px;
       font-size: 13px;
+      color: ${otCellText};
     }
 
     .ot-th-ongoing,
     .ot-td-ongoing {
-      background: #c6efce !important;
+      background: ${otOngoingBg} !important;
+      color: ${otCellText} !important;
     }
 
     .ot-th-waiting,
     .ot-td-waiting {
-      background: #ffeb9c !important;
+      background: ${otWaitingBg} !important;
+      color: ${otCellText} !important;
     }
 
     .ot-th-otno,
     .ot-td-otno {
-      background: ${tableHeaderBg};
+      background: ${otOtnoBg} !important;
+      color: ${otCellText} !important;
       font-weight: 700;
       text-align: center;
     }
@@ -174,8 +199,11 @@ function buildPrintStyles(theme) {
       font-size: 12px;
       color: ${text};
     }
-      body {
-        padding: 0;
+
+    @media print {
+      html,
+      body,
+      .ot-sheet {
         background-color: ${bgColor} !important;
       }
     }
@@ -206,7 +234,7 @@ export function printTable(title, tableElement, bgColor) {
         <title>${escapeHtml(title)}</title>
         <style>${buildPrintStyles(theme)}</style>
       </head>
-      <body>
+      <body style="background-color: ${theme.bgColor};">
         ${tableHtml}
       </body>
     </html>

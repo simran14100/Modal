@@ -15,4 +15,8 @@ const otRecordSchema = new mongoose.Schema(
   { timestamps: true }
 )
 
-module.exports = mongoose.model('OtRecord', otRecordSchema)
+function getOtRecordModel(connection) {
+  return connection.models.OtRecord || connection.model('OtRecord', otRecordSchema)
+}
+
+module.exports = { otRecordSchema, getOtRecordModel }
