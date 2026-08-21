@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Modal from './components/Modal'
 import DataTable from './components/DataTable'
 import FloorSelector from './components/FloorSelector'
@@ -22,24 +22,54 @@ function App() {
   const [tableData, setTableData] = useState([])
   const [sheetDate, setSheetDate] = useState(todayString())
   const [loading, setLoading] = useState(false)
+  const [hasPendingEdits, setHasPendingEdits] = useState(false)
+  const hasPendingEditsRef = useRef(false)
 
   useEffect(() => {
-    if (!isModalOpen || !selectedFloor) return
+    hasPendingEditsRef.current = hasPendingEdits
+  }, [hasPendingEdits])
 
-    const loadRecords = async () => {
-      setLoading(true)
+  const loadRecords = useCallback(
+    async ({ silent = false } = {}) => {
+      if (!selectedFloor) return
+
+      if (!silent) setLoading(true)
       try {
         const records = await fetchOtRecords(selectedFloor)
         setTableData(records)
       } catch (error) {
         console.error('Failed to load data from server.', error)
       } finally {
-        setLoading(false)
+        if (!silent) setLoading(false)
+      }
+    },
+    [selectedFloor]
+  )
+
+  useEffect(() => {
+    if (!isModalOpen || !selectedFloor) return
+
+    loadRecords()
+
+    const pollInterval = window.setInterval(() => {
+      if (!hasPendingEditsRef.current) {
+        loadRecords({ silent: true })
+      }
+    }, 5000)
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && !hasPendingEditsRef.current) {
+        loadRecords({ silent: true })
       }
     }
 
-    loadRecords()
-  }, [isModalOpen, selectedFloor])
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      window.clearInterval(pollInterval)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [isModalOpen, selectedFloor, loadRecords])
 
   const handleOpenFloorSelect = () => {
     setView('floor-select')
@@ -59,6 +89,7 @@ function App() {
     setIsModalOpen(false)
     setSelectedFloor(null)
     setTableData([])
+    setHasPendingEdits(false)
     setView('floor-select')
     try {
       await exitFullscreen()
@@ -90,6 +121,7 @@ function App() {
               floor={selectedFloor}
               data={tableData}
               onChange={setTableData}
+              onPendingChange={setHasPendingEdits}
               loading={loading}
               sheetDate={sheetDate}
               onDateChange={setSheetDate}

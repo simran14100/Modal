@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   createOtRecord,
   deleteOtRecord,
@@ -11,11 +11,25 @@ import StatusSelect from './StatusSelect'
 
 const renumberRows = (rows) => rows.map((row, index) => ({ ...row, otNo: index + 1 }))
 
-function DataTable({ floor, data, onChange, loading, sheetDate, onDateChange }) {
+function DataTable({ floor, data, onChange, onPendingChange, loading, sheetDate, onDateChange }) {
   const debounceTimers = useRef({})
   const [confirmOtNo, setConfirmOtNo] = useState(null)
   const [confirmLockOtNo, setConfirmLockOtNo] = useState(null)
   const [errorMessage, setErrorMessage] = useState('')
+
+  const syncPendingState = () => {
+    onPendingChange?.(Object.keys(debounceTimers.current).length > 0)
+  }
+
+  useEffect(() => {
+    return () => {
+      Object.keys(debounceTimers.current).forEach((key) => {
+        clearTimeout(debounceTimers.current[key])
+      })
+      debounceTimers.current = {}
+      onPendingChange?.(false)
+    }
+  }, [onPendingChange])
 
   const saveRow = async (otNo, updatedRow) => {
     try {
@@ -32,6 +46,9 @@ function DataTable({ floor, data, onChange, loading, sheetDate, onDateChange }) 
     } catch (error) {
       console.error(error)
       setErrorMessage(error.message || 'Failed to save changes. Please try again.')
+    } finally {
+      delete debounceTimers.current[otNo]
+      syncPendingState()
     }
   }
 
@@ -44,6 +61,7 @@ function DataTable({ floor, data, onChange, loading, sheetDate, onDateChange }) 
 
     clearTimeout(debounceTimers.current[otNo])
     debounceTimers.current[otNo] = setTimeout(() => saveRow(otNo, updatedRow), 500)
+    syncPendingState()
   }
 
   const addRow = async () => {
@@ -64,6 +82,7 @@ function DataTable({ floor, data, onChange, loading, sheetDate, onDateChange }) 
       clearTimeout(debounceTimers.current[key])
       delete debounceTimers.current[key]
     })
+    syncPendingState()
 
     try {
       const row = data.find((item) => item.otNo === otNo)
